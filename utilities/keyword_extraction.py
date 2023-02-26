@@ -41,7 +41,7 @@ tqdm.pandas()
 import yaml
 import warnings
 from urllib.parse import urlparse
-
+from sklearn.feature_extraction.text import CountVectorizer
 
 
 warnings.filterwarnings("ignore")
@@ -161,7 +161,7 @@ df['clean_text']=df['DownloadData'].progress_apply(preprocess_text)
 normalize_corpus = np.vectorize(preprocess_text)
 norm_corpus = normalize_corpus(list(df['clean_text']))
 
-from sklearn.feature_extraction.text import CountVectorizer
+
 cv = CountVectorizer(ngram_range=(2, 5), min_df=0.0005, max_df=0.9995, stop_words=ar_stopwords)
 cv_matrix = cv.fit_transform(norm_corpus)
 df_bow_sklearn = pd.DataFrame(cv_matrix.toarray(),columns=cv.get_feature_names())
@@ -170,3 +170,4 @@ df =df.to_frame()
 df.rename(columns = {0:'count'}, inplace = True)
 df.sort_values(by=['count'], ascending=False, inplace = True)
 
+print(df.head())
