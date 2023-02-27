@@ -24,16 +24,26 @@ tqdm.pandas()
 warnings.filterwarnings("ignore")
 stemmer = ISRIStemmer()
 
-warnings.filterwarnings("ignore")
 
-nltk.download('stopwords')
-ar_stopwords = stopwords.words('arabic')
+
 
 class TextProcessor:
 
     def __init__(self, arabic_stopwords=stopwords.words('arabic')):
-        self.arabic_stopwords = arabic_stopwords
+        self.arabic_stopwords = self.get_stop_words()
         self.arabic_punctuations = '''`÷×؛<>_()*&^%][ـ،/:"؟.,'{}~¦+|!”…“–ـ'''
+
+
+    def get_stop_words(self):
+        ar_stopwords = set(stopwords.words('arabic'))
+        ar_stopwords.update([
+            "مع", "من", "إلى", "في", "فى", "كان", "على", "علي", "يا", "اذا", "مش", "انه", "انا", "شي", "انت", "ان",
+            "اله", "الي", "اي", "مو"
+            , "بسب", "ال", "ده", "شيء", "انهم", "زي", "او", "واله", "يعني", "عشان"])
+
+        ar_stopwords = list(ar_stopwords)
+
+        return ar_stopwords
 
     def remove_special(self, text):
         for letter in '#.][!XR':
@@ -128,7 +138,7 @@ class TextProcessor:
             text = ' '
         return text.strip()
 
-def extract_keywords(data, processor):
+def extract_keywords(data, processor, ar_stopwords):
 
 
     # normalize corpus
@@ -145,5 +155,38 @@ def extract_keywords(data, processor):
     df = df.to_frame()
     df.rename(columns={0: 'count'}, inplace=True)
     df.sort_values(by=['count'], ascending=False, inplace=True)
+    df['key_phrases'] = df.index
+    df = df.reset_index(level=0)
+    del df['index']
 
     return df
+
+# TODO: Optimize this function to become faster
+def remove_repeated_keywords(df):
+    # Create an empty dictionary to store the unique key phrases
+    result = {}
+
+    # Iterate through each row in the dataframe
+    for i, row in df.iterrows():
+        # Create a boolean mask to filter out the current row
+        mask = df.index != i
+
+        # Filter the dataframe to only include rows that are not the current row
+        search_df = df.loc[mask]
+
+        # Check if the current key phrase exists in any of the other key phrases
+        add = True
+        l = len(row['key_phrases'])
+        for phrase in set(search_df['key_phrases']):
+            if row['key_phrases'] in phrase and len(phrase) > l:
+                add = False
+                break
+
+        # If the current key phrase is unique, add it to the result dictionary
+        if add:
+            result[row['key_phrases']] = row['count']
+
+    # Convert the result dictionary to a dataframe and return it
+    return pd.DataFrame(list(result.items()), columns=['key_phrases', 'count'])
+
+
