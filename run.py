@@ -54,7 +54,7 @@ class KeywordSimilarity:
 
 if __name__ == "__main__":
     ks = KeywordSimilarity(data_path="data/Output_sorted.csv", queries_path="utilities/queries.yml")
-    similarity = ks.run(num_similar = 10)
-    print(similarity)
+    similarity = ks.run(num_similar = 10).T
+    similarity.to_csv("data/result.csv", encoding='utf-8-sig')
 
 
