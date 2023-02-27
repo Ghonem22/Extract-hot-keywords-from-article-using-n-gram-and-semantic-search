@@ -35,4 +35,4 @@ class SemanticSearch:
 
         keywords = sorted(keywords.items(), key=lambda x: x[1])
 
-        return list(keywords.keys())
+        return  [k[0] for k in keywords]
